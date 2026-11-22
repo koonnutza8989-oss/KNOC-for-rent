@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KNOC คิวเช่าชุด</title>
+<script>try{var _t=localStorage.getItem('knoc-theme');if(!_t)_t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';document.documentElement.setAttribute('data-theme',_t);}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
@@ -21,7 +22,18 @@
   --danger:#b8352a;
   --font-display:'Mali','Noto Sans Thai',sans-serif;
   --font-body:'Noto Sans Thai',system-ui,sans-serif;
+  --chocbg:#4a2b22; --oncho:#fffaf3; --headbg:#4a2b22;
+  --surface:#ffffff; --soft:#e3f1ea; --tabbg:#d3ebdf; --mint2:#d6efe2; --on-mint:#ffffff;
+  --amber-bg:#f4dfbd; --amber-fg:#6e4510; --free-fg:#17503c; --overlay:rgba(74,43,34,.5);
   color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --mint-bg:#111915; --mint:#2c5645; --mint2:#254a3b; --mint-deep:#43c297; --on-mint:#06241a;
+  --choc:#f0e6dc; --choc-soft:#b8a99d; --cream:#1b2621; --line:#304339; --caramel:#e0a15a; --danger:#e5594a;
+  --chocbg:#5b372c; --oncho:#fff3e8; --headbg:#2a1914;
+  --surface:#232f2a; --soft:#2b3b34; --tabbg:#1b2621;
+  --amber-bg:#4d3c1f; --amber-fg:#f2d193; --free-fg:#bff0dc; --overlay:rgba(0,0,0,.6);
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -32,13 +44,13 @@ button{cursor:pointer}
 :focus-visible{outline:3px solid var(--mint-deep);outline-offset:2px}
 .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
 
-header.top{background:var(--choc);color:var(--cream);padding:7px 0}
+header.top{background:var(--headbg);color:var(--oncho);padding:7px 0}
 .top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
 .brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .brand h1{font-family:var(--font-display);font-size:1.25rem;line-height:1.3;margin:0;font-weight:700;letter-spacing:.2px}
 .brand span{color:var(--mint);font-size:.88rem}
 .hb{margin-left:auto;display:flex;gap:6px}
-.hbtn{background:rgba(255,255,255,.12);color:var(--cream);border:0;border-radius:999px;padding:3px 10px;font-size:.84rem;cursor:pointer;min-height:30px;display:inline-flex;align-items:center}
+.hbtn{background:rgba(255,255,255,.12);color:var(--oncho);border:0;font-family:inherit;border:0;border-radius:999px;padding:3px 10px;font-size:.84rem;cursor:pointer;min-height:30px;display:inline-flex;align-items:center}
 .stats{display:flex;gap:6px;flex-wrap:wrap}
 .stat{background:rgba(255,255,255,.1);border-radius:10px;padding:1px 10px;display:flex;gap:8px;align-items:baseline}
 .stat b{font-family:var(--font-display);font-size:1rem;font-variant-numeric:tabular-nums}
@@ -46,17 +58,17 @@ header.top{background:var(--choc);color:var(--cream);padding:7px 0}
 .stat.warn b{color:#ffb4a8}
 
 .bar{position:sticky;top:0;z-index:5;background:var(--mint-bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
-.tabs{display:flex;gap:6px;background:#d3ebdf;padding:5px;border-radius:999px}
+.tabs{display:flex;gap:6px;background:var(--tabbg);padding:5px;border-radius:999px}
 .tab{flex:1;border:0;background:transparent;padding:10px 12px;border-radius:999px;font-weight:700;color:var(--choc-soft)}
-.tab[aria-selected="true"]{background:var(--choc);color:var(--cream)}
+.tab[aria-selected="true"]{background:var(--chocbg);color:var(--oncho)}
 .tools{display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap}
 .search{flex:1 1 220px;position:relative}
 .search input{width:100%;border:1.5px solid var(--line);background:var(--cream);border-radius:999px;padding:10px 16px 10px 40px;min-height:44px}
 .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--choc-soft)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{border:1.5px solid var(--line);background:var(--cream);border-radius:999px;padding:6px 12px;font-size:.92rem;min-height:36px}
-.chip[aria-pressed="true"]{background:var(--mint-deep);border-color:var(--mint-deep);color:#fff}
-.btn-add{background:var(--mint-deep);color:#fff;border:0;border-radius:999px;padding:10px 18px;font-weight:700;min-height:44px}
+.chip[aria-pressed="true"]{background:var(--mint-deep);border-color:var(--mint-deep);color:var(--on-mint)}
+.btn-add{background:var(--mint-deep);color:var(--on-mint);border:0;border-radius:999px;padding:10px 18px;font-weight:700;min-height:44px}
 
 main{padding:16px 0 60px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
@@ -67,7 +79,7 @@ main{padding:16px 0 60px}
 .card .info{padding:10px 12px 12px}
 .card h3{margin:0;font-size:1rem;font-weight:700;overflow-wrap:anywhere}
 .card .meta{display:flex;justify-content:space-between;color:var(--choc-soft);font-size:.9rem;margin-top:2px;font-variant-numeric:tabular-nums}
-.noimg{width:100%;height:100%;display:grid;place-items:center;font-family:var(--font-display);font-size:2.4rem;color:var(--mint-deep);background:linear-gradient(135deg,#d6efe2,#bfe6d3)}
+.noimg{width:100%;height:100%;display:grid;place-items:center;font-family:var(--font-display);font-size:2.4rem;color:var(--mint-deep);background:linear-gradient(135deg,var(--mint2),var(--mint))}
 
 .qlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
 .qrow{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:center;background:var(--cream);border:1.5px solid var(--line);border-radius:16px;padding:10px;text-align:left;width:100%}
@@ -81,18 +93,18 @@ main{padding:16px 0 60px}
 .qrow .dates b{font-weight:700}
 .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.82rem;font-weight:700;line-height:1.5}
-.b-free{background:var(--mint);color:#17503c}
-.b-busy{background:var(--choc);color:var(--cream)}
-.b-res{background:#f4dfbd;color:#6e4510}
-.b-paid{background:var(--mint-deep);color:#fff}
+.b-free{background:var(--mint);color:var(--free-fg)}
+.b-busy{background:var(--chocbg);color:var(--oncho)}
+.b-res{background:var(--amber-bg);color:var(--amber-fg)}
+.b-paid{background:var(--mint-deep);color:var(--on-mint)}
 .b-late{background:var(--danger);color:#fff}
-.b-today{background:#f4dfbd;color:#6e4510}
-.empty{text-align:center;color:var(--choc-soft);padding:48px 16px;background:var(--cream);border:1.5px dashed var(--line);border-radius:16px}
-.empty h2{font-family:var(--font-display);margin:0 0 6px;color:var(--choc);font-size:1.2rem}
+.b-today{background:var(--amber-bg);color:var(--amber-fg)}
+.empty{text-align:center;color:var(--choc-soft);padding:64px 16px;background:var(--cream);border:1.5px dashed var(--line);border-radius:16px}
+.empty h2{font-family:var(--font-display);margin:0;color:var(--choc);font-size:1.3rem;font-weight:700}
 .note{color:var(--choc-soft);font-size:.9rem;margin:0 0 10px}
 
 /* dialogs */
-.modal{position:fixed;inset:0;z-index:20;background:rgba(74,43,34,.5);display:flex;align-items:flex-end;justify-content:center}
+.modal{position:fixed;inset:0;z-index:20;background:var(--overlay);display:flex;align-items:flex-end;justify-content:center}
 .modal[hidden]{display:none}
 .sheet{background:var(--cream);width:100%;max-width:560px;max-height:94%;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px 24px}
 @media (min-width:700px){.modal{align-items:center}.sheet{border-radius:22px;max-height:92%}}
@@ -101,53 +113,55 @@ main{padding:16px 0 60px}
 .shead .th{width:72px;height:92px;border-radius:12px;overflow:hidden;background:var(--mint)}
 .shead .th img{width:100%;height:100%;object-fit:cover}
 .shead p{margin:2px 0 0;color:var(--choc-soft);font-size:.92rem}
-.x{border:0;background:#e3f1ea;border-radius:50%;width:40px;height:40px;font-size:1.3rem;line-height:1}
+.x{border:0;background:var(--soft);border-radius:50%;width:40px;height:40px;font-size:1.3rem;line-height:1}
+.f>.lbl{display:block;font-size:.9rem;color:var(--choc-soft);margin-bottom:6px}
 .sec{border-top:1.5px solid var(--line);padding-top:14px;margin-top:6px}
 .sec h3{margin:0 0 10px;font-size:1rem}
 label.f{display:block;font-weight:500;margin:0 0 12px}
+div.f{margin:0 0 12px}
 label.f span{display:block;font-size:.9rem;color:var(--choc-soft);margin-bottom:4px}
-.in{width:100%;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;min-height:46px}
+.in{width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;min-height:46px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 .seg input{position:absolute;opacity:0;pointer-events:none}
-.seg label{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px;text-align:center;font-weight:700;min-height:46px;cursor:pointer}
-.seg input:checked+label{background:var(--choc);color:var(--cream);border-color:var(--choc)}
+.seg label{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px;text-align:center;font-weight:700;min-height:46px;cursor:pointer}
+.seg input:checked+label{background:var(--chocbg);color:var(--oncho);border-color:var(--chocbg)}
 .seg input:focus-visible+label{outline:3px solid var(--mint-deep);outline-offset:2px}
 .btn{display:block;width:100%;border:0;border-radius:14px;padding:12px;font-weight:700;min-height:48px;margin-top:8px}
-.btn.main{background:var(--mint-deep);color:#fff}
-.btn.choc{background:var(--choc);color:var(--cream)}
-.btn.soft{background:#e3f1ea;color:var(--choc)}
-.btn.danger{background:#fff;color:var(--danger);border:1.5px solid var(--danger)}
+.btn.main{background:var(--mint-deep);color:var(--on-mint)}
+.btn.choc{background:var(--chocbg);color:var(--oncho)}
+.btn.soft{background:var(--soft);color:var(--choc)}
+.btn.danger{background:var(--surface);color:var(--danger);border:1.5px solid var(--danger)}
 .btn.link{background:transparent;color:var(--choc-soft);text-decoration:underline;min-height:40px}
 .err{color:var(--danger);font-size:.92rem;min-height:1.3em;margin:4px 0 0}
-.big{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.big{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
 .big .k{font-size:.85rem;color:var(--choc-soft)}
 .big .v{font-family:var(--font-display);font-size:1.15rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .big.late{border-color:var(--danger)}
 .dr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 /* calendar picker */
-.cal{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px}
+.cal{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px}
 .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.cal-head button{border:0;background:#e3f1ea;border-radius:10px;width:42px;height:42px;font-size:1.3rem}
+.cal-head button{border:0;background:var(--soft);border-radius:10px;width:42px;height:42px;font-size:1.3rem}
 .cal-head strong{font-family:var(--font-display)}
 .cal-wd,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
 .cal-wd span{text-align:center;font-size:.8rem;color:var(--choc-soft);padding:2px 0}
 .day{border:0;background:transparent;border-radius:10px;aspect-ratio:1/1;min-height:38px;font-variant-numeric:tabular-nums}
 .day.today{box-shadow:inset 0 0 0 2px var(--mint-deep)}
 .day.rng{background:var(--mint);border-radius:0}
-.day.s,.day.e{background:var(--choc);color:var(--cream);border-radius:10px;font-weight:700}
+.day.s,.day.e{background:var(--chocbg);color:var(--oncho);border-radius:10px;font-weight:700}
 .day.s.rng-end-open{border-radius:10px}
 .sum{font-weight:500;margin:6px 0 10px;min-height:1.5em;font-variant-numeric:tabular-nums}
 
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--choc);color:var(--cream);padding:10px 18px;border-radius:999px;z-index:40;font-weight:500;max-width:90%}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--chocbg);color:var(--oncho);padding:10px 18px;border-radius:999px;z-index:40;font-weight:500;max-width:90%}
 .toast[hidden]{display:none}
-.imgpick{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;margin-bottom:12px}
+.imgpick{margin-bottom:14px}
 .imgpick .hint{margin:0;color:var(--choc-soft);font-size:.9rem}
-.imgpick .pv{width:110px;height:140px;border-radius:12px;overflow:hidden;background:var(--mint);cursor:pointer;border:2px dashed var(--mint-deep)}
+.imgpick .pv{width:120px;height:150px;border-radius:12px;overflow:hidden;background:var(--mint);cursor:pointer;border:2px dashed var(--mint-deep)}
 .imgpick .pv:hover{filter:brightness(.97)}
 .imgpick .pv img{width:100%;height:100%;object-fit:cover}
-.fileb{display:inline-block;background:#e3f1ea;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;min-height:44px}
+.fileb{display:inline-block;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;min-height:44px}
 .fileb input{position:absolute;opacity:0;width:1px;height:1px}
 .fileb:focus-within{outline:3px solid var(--mint-deep);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -158,7 +172,7 @@ label.f span{display:block;font-size:.9rem;color:var(--choc-soft);margin-bottom:
   <div class="wrap">
     <div class="brand"><h1>KNOC</h1><span>ระบบคิวเช่าชุด</span></div>
     <div class="stats" id="stats"></div>
-    <span class="hb"><button type="button" class="hbtn" id="exportBtn">สำรองข้อมูล</button>
+    <span class="hb"><button type="button" class="hbtn" id="themeBtn">โหมดมืด</button><button type="button" class="hbtn" id="exportBtn">สำรองข้อมูล</button>
     <label class="hbtn">นำเข้าข้อมูล<input type="file" id="importFile" accept=".json,application/json" hidden></label></span>
   </div>
 </header>
@@ -265,8 +279,8 @@ function renderQueue(){
   });
   if(!list.length){
     $('#content').innerHTML=all
-      ?'<div class="empty"><h2>ไม่พบคิวที่ตรงกับที่เลือก</h2>ลองเปลี่ยนตัวกรองหรือคำค้นหา</div>'
-      :'<div class="empty"><h2>ยังไม่มีคิวเช่า</h2>ไปที่แท็บ “ชุดทั้งหมดในร้าน” แล้วกดชุดที่ว่างเพื่อลงคิว</div>';
+      ?'<div class="empty"><h2>ไม่พบคิวที่ตรงกับที่เลือก</h2></div>'
+      :'<div class="empty"><h2>ยังไม่มีคิวเช่า</h2></div>';
     return;
   }
   $('#content').innerHTML='<p class="note">เลยกำหนดคืนขึ้นก่อน ที่เหลือเรียงตามวันที่ลูกค้าใช้</p><div class="qlist">'+list.map(c=>{
@@ -287,8 +301,8 @@ function renderShop(){
   list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','th'));
   if(!list.length){
     $('#content').innerHTML=costumes.length
-      ?'<div class="empty"><h2>ไม่พบชุดที่ค้นหา</h2>ลองพิมพ์ชื่อชุดใหม่ หรือเปลี่ยนตัวกรอง</div>'
-      :'<div class="empty"><h2>ยังไม่มีชุดในร้าน</h2>กด “+ เพิ่มชุดใหม่” ด้านบนเพื่อใส่ชุดตัวแรก</div>';
+      ?'<div class="empty"><h2>ไม่พบชุดที่ค้นหา</h2></div>'
+      :'<div class="empty"><h2>ยังไม่มีชุดในร้าน</h2></div>';
     return;
   }
   $('#content').innerHTML='<div class="grid">'+list.map(c=>{
@@ -379,13 +393,14 @@ function confirmBox(msg,yes,onYes,back){
   openModal('<h2>'+esc(msg)+'</h2><button type="button" class="btn danger" data-act="yes">'+esc(yes)+'</button><button type="button" class="btn soft" data-act="no">ไม่ทำ</button>');
   cur=Object.assign({},cur,{onYes:onYes,back:back});
 }
+function sizeList(cur){ const l=['S','M','L','XL','Free size']; if(cur&&l.indexOf(cur)<0) l.push(cur); return l; }
 function costumeForm(c){
   pendingImg=c&&c.img?c.img:'';
   openModal('<div class="shead" style="grid-template-columns:1fr auto"><h2>'+(c?'แก้ไขข้อมูลชุด':'เพิ่มชุดใหม่')+'</h2><button type="button" class="x" data-close aria-label="ปิด">×</button></div>'+
     '<div class="imgpick"><div class="pv" id="pv" role="button" tabindex="0" aria-label="เลือกรูปชุด">'+(pendingImg?'<img src="'+pendingImg+'" alt="">':'<div class="noimg">+</div>')+'</div>'+
-    '<input type="file" id="file" accept="image/*" hidden><p class="hint">แตะที่กรอบเพื่อเลือกรูป หรือลากรูปมาวาง หรือกด Ctrl+V</p></div>'+
+    '<input type="file" id="file" accept="image/*" hidden></div>'+
     '<label class="f"><span>ชื่อชุด</span><input class="in" id="nm" autocomplete="off" value="'+esc(c?c.name:'')+'"></label>'+
-    '<label class="f"><span>ไซส์ชุด</span><input class="in" id="sz" autocomplete="off" value="'+esc(c?c.size:'')+'"><span class="chips" style="margin-top:8px">'+['S','M','L','XL','Free size'].map(z=>'<button type="button" class="chip" data-size="'+z+'">'+z+'</button>').join('')+'</span></label>'+
+    '<div class="f"><span class="lbl">ไซส์ชุด</span><input type="hidden" id="sz" value="'+esc(c?c.size:'')+'"><div class="chips" id="szchips">'+sizeList(c?c.size:'').map(z=>'<button type="button" class="chip" data-size="'+esc(z)+'" aria-pressed="'+((c&&c.size===z)?'true':'false')+'">'+esc(z)+'</button>').join('')+'</div></div>'+
     '<div class="row2"><label class="f"><span>ราคาไพร</span><input class="in" id="pr" inputmode="numeric" autocomplete="off" value="'+esc(c?gp(c,'pre'):'')+'"></label>'+
     '<label class="f"><span>ราคาเทส</span><input class="in" id="ts" inputmode="numeric" autocomplete="off" value="'+esc(c?gp(c,'test'):'')+'"></label></div>'+
     '<p class="err" id="err" role="alert"></p>'+
@@ -473,7 +488,7 @@ document.addEventListener('click',function(e){
   if(e.target===$('#modal')){ closeModal(); return; }
   if(e.target.id==='addBtn'){ cur={}; costumeForm(null); return; }
   if(!t) return;
-  if(t.dataset.size){ const z=$('#sz'); if(z){ z.value=t.dataset.size; } return; }
+  if(t.dataset.size){ const z=$('#sz'); if(z){ z.value=(z.value===t.dataset.size)?'':t.dataset.size; document.querySelectorAll('#szchips .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.size===z.value))); } return; }
   if(t.dataset.tab){ tab=t.dataset.tab; document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b===t))); render(); return; }
   if(t.dataset.chip){ if(tab==='queue') fQ=t.dataset.chip; else fC=t.dataset.chip; render(); return; }
   if(t.dataset.open){ showCostume(t.dataset.open); return; }
@@ -555,6 +570,13 @@ async function importData(file){
     toast('นำเข้า '+j.costumes.length+' ชุดแล้ว');
   }catch(e){ toast('ไฟล์นี้ไม่ใช่ไฟล์สำรองของ KNOC'); }
 }
+function applyTheme(t,keep){
+  document.documentElement.setAttribute('data-theme',t);
+  if(keep){ try{ localStorage.setItem('knoc-theme',t); }catch(e){} }
+  $('#themeBtn').textContent=t==='dark'?'โหมดสว่าง':'โหมดมืด';
+}
+$('#themeBtn').addEventListener('click',()=>applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark',true));
+applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light',false);
 $('#exportBtn').addEventListener('click',()=>{ if(db) exportData(); });
 $('#importFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(f&&db) importData(f); e.target.value=''; });
 
