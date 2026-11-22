@@ -331,4 +331,229 @@ function initBook(b){
   cal=b?{y:+b.start.slice(0,4),m:+b.start.slice(5,7)-1,start:b.start,end:b.end}:{y:n.getFullYear(),m:n.getMonth(),start:null,end:null};
   renderCal();
 }
-function rend
+function renderCal(){
+  const el=$('#cal'); if(!el||!cal) return;
+  const first=new Date(cal.y,cal.m,1).getDay(), dim=new Date(cal.y,cal.m+1,0).getDate(), t=todayIso();
+  let cells='';
+  for(let i=0;i<first;i++) cells+='<span></span>';
+  for(let d=1;d<=dim;d++){
+    const s=iso(cal.y,cal.m,d); let cls='day';
+    if(s===t) cls+=' today';
+    if(cal.start&&cal.end&&s>cal.start&&s<cal.end) cls+=' rng';
+    if(s===cal.start) cls+=' s';
+    if(s===cal.end) cls+=' e';
+    cells+='<button type="button" class="'+cls+'" data-day="'+s+'" aria-label="'+d+' '+TH_M[cal.m]+' '+cal.y+'">'+d+'</button>';
+  }
+  el.innerHTML='<div class="cal-head"><button type="button" data-cal="-1" aria-label="เดือนก่อน">‹</button><strong>'+TH_M[cal.m]+' '+cal.y+'</strong><button type="button" data-cal="1" aria-label="เดือนถัดไป">›</button></div>'+
+    '<div class="cal-wd">'+WD.map(w=>'<span>'+w+'</span>').join('')+'</div><div class="cal-grid">'+cells+'</div>';
+  let s='แตะวันที่ลูกค้าใช้ชุด';
+  if(cal.start&&!cal.end) s='ลูกค้าใช้ '+fmt(cal.start)+' · แตะวันที่ต้องส่งคืน';
+  if(cal.start&&cal.end) s='ลูกค้าใช้ '+fmt(cal.start)+' · ส่งคืน '+fmt(cal.end)+' ('+(dayDiff(cal.start,cal.end)+1)+' วัน)';
+  $('#sum').textContent=s;
+}
+function pickDay(s){
+  if(!cal.start||(cal.start&&cal.end)){ cal.start=s; cal.end=null; }
+  else if(s<cal.start){ cal.end=cal.start; cal.start=s; }
+  else cal.end=s;
+  renderCal();
+}
+function bookedView(c){
+  const b=c.booking,i=info(c);
+  return '<div class="sec"><div class="big"><div class="k">ลูกค้า (FB)</div><div class="v">'+esc(b.fb)+'</div></div>'+
+    '<div class="dr"><div class="big"><div class="k">วันที่ลูกค้าใช้</div><div class="v">'+fmt(b.start)+'</div></div>'+
+    '<div class="big'+(i.late?' late':'')+'"><div class="k">วันที่ต้องส่งคืน</div><div class="v">'+fmt(b.end)+'</div></div></div>'+
+    '<p style="margin:0 0 10px"><span class="badge '+(b.paid?'b-paid':'b-res')+'">'+(b.paid?'ชำระแล้ว':'จอง')+'</span> '+
+    (i.late?'<span class="badge b-late">เลยกำหนดคืน '+i.days+' วัน</span>':'')+(i.dueToday?'<span class="badge b-today">ต้องคืนวันนี้</span>':'')+'</p>'+
+    (b.paid?'<button type="button" class="btn soft" data-act="setres">เปลี่ยนกลับเป็นจอง</button>':'<button type="button" class="btn main" data-act="setpaid">เปลี่ยนเป็นชำระแล้ว</button>')+
+    '<button type="button" class="btn choc" data-act="returned">ลูกค้าส่งคืนแล้ว</button>'+
+    '<button type="button" class="btn soft" data-act="editbook">แก้ชื่อ / วันที่</button>'+
+    '<button type="button" class="btn danger" data-act="cancel">ยกเลิกจอง</button>'+
+    '<button type="button" class="btn link" data-act="editcostume">แก้ไขข้อมูลชุด</button></div>';
+}
+function confirmBox(msg,yes,onYes,back){
+  openModal('<h2>'+esc(msg)+'</h2><button type="button" class="btn danger" data-act="yes">'+esc(yes)+'</button><button type="button" class="btn soft" data-act="no">ไม่ทำ</button>');
+  cur=Object.assign({},cur,{onYes:onYes,back:back});
+}
+function costumeForm(c){
+  pendingImg=c&&c.img?c.img:'';
+  openModal('<div class="shead" style="grid-template-columns:1fr auto"><h2>'+(c?'แก้ไขข้อมูลชุด':'เพิ่มชุดใหม่')+'</h2><button type="button" class="x" data-close aria-label="ปิด">×</button></div>'+
+    '<div class="imgpick"><div class="pv" id="pv">'+(pendingImg?'<img src="'+pendingImg+'" alt="">':'<div class="noimg">+</div>')+'</div>'+
+    '<label class="fileb">เลือกรูปชุด<input type="file" id="file" accept="image/*"></label></div>'+
+    '<label class="f"><span>ชื่อชุด</span><input class="in" id="nm" autocomplete="off" value="'+esc(c?c.name:'')+'"></label>'+
+    '<label class="f"><span>ไซส์ชุด</span><input class="in" id="sz" list="sizes" autocomplete="off" value="'+esc(c?c.size:'')+'"><datalist id="sizes"><option value="S"><option value="M"><option value="L"><option value="XL"><option value="Free size"></datalist></label>'+
+    '<div class="row2"><label class="f"><span>ราคาไพร (ออกงาน)</span><input class="in" id="pr" inputmode="numeric" autocomplete="off" value="'+esc(c?gp(c,'pre'):'')+'"></label>'+
+    '<label class="f"><span>ราคาเทส (อยู่บ้าน)</span><input class="in" id="ts" inputmode="numeric" autocomplete="off" value="'+esc(c?gp(c,'test'):'')+'"></label></div>'+
+    '<p class="err" id="err" role="alert"></p>'+
+    '<button type="button" class="btn main" data-act="savecostume">'+(c?'บันทึก':'เพิ่มชุด')+'</button>'+
+    (c?'<button type="button" class="btn danger" data-act="delcostume">ลบชุดนี้ออกจากร้าน</button>':'')+
+    '<button type="button" class="btn link" data-act="'+(c?'back':'close')+'">ย้อนกลับ</button>');
+  cur=Object.assign({},cur,{editId:c?c.id:null});
+}
+function resize(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onerror=()=>rej(new Error('read'));
+    r.onload=()=>{
+      const im=new Image();
+      im.onerror=()=>rej(new Error('img'));
+      im.onload=()=>{
+        let out='';
+        [[640,.82],[520,.72],[420,.62],[340,.55]].forEach(function(p){
+          if(out&&out.length<190000) return;
+          const k=Math.min(1,p[0]/Math.max(im.width,im.height));
+          const cv=document.createElement('canvas');
+          cv.width=Math.round(im.width*k); cv.height=Math.round(im.height*k);
+          const cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); cx.drawImage(im,0,0,cv.width,cv.height);
+          out=cv.toDataURL('image/jpeg',p[1]);
+        });
+        res(out);
+      };
+      im.src=r.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+/* ---------- actions ---------- */
+async function act(a){
+  const c=cur&&cur.id?byId(cur.id):null;
+  if(a==='close'){ closeModal(); return; }
+  if(a==='back'){ if(c) showCostume(c.id); else closeModal(); return; }
+  if(a==='no'){ if(cur&&cur.back&&byId(cur.back)) showCostume(cur.back); else closeModal(); return; }
+  if(a==='yes'){ const f=cur&&cur.onYes; if(f) await f(); return; }
+  if(a==='editcostume'&&c){ costumeForm(c); return; }
+  if(a==='editbook'&&c){ openModal(head(c)+bookingForm(c,c.booking)); initBook(c.booking); return; }
+  if(a==='savebook'&&c){
+    const fb=$('#fb').value.trim(), paid=document.querySelector('input[name=pay]:checked').value==='paid';
+    if(!fb){ $('#err').textContent='ใส่ชื่อ FB ของลูกค้าก่อน'; $('#fb').focus(); return; }
+    if(!cal.start||!cal.end){ $('#err').textContent='เลือกให้ครบทั้งวันที่ใช้และวันที่ต้องส่งคืน'; return; }
+    const d=body(c); d.booking={fb:fb,start:cal.start,end:cal.end,paid:paid};
+    if(await save(c.id,d)){ closeModal(); toast('บันทึกคิวแล้ว'); }
+    return;
+  }
+  if((a==='setpaid'||a==='setres')&&c){
+    const d=body(c); d.booking=Object.assign({},c.booking,{paid:a==='setpaid'});
+    if(await save(c.id,d)){ closeModal(); toast(a==='setpaid'?'เปลี่ยนเป็นชำระแล้ว':'เปลี่ยนกลับเป็นจอง'); }
+    return;
+  }
+  if((a==='cancel'||a==='returned')&&c){
+    const isC=a==='cancel';
+    confirmBox(isC?'ยกเลิกจองของ '+c.booking.fb+' ?':'ลูกค้าส่ง '+c.name+' คืนแล้ว?',isC?'ยกเลิกจอง':'คืนแล้ว ปล่อยเป็นคิวว่าง',async function(){
+      const d=body(c); d.booking=null;
+      if(await save(c.id,d)){ closeModal(); toast(isC?'ยกเลิกจองแล้ว ชุดกลับเป็นคิวว่าง':'รับคืนแล้ว ชุดกลับเป็นคิวว่าง'); }
+    },c.id);
+    return;
+  }
+  if(a==='savecostume'){
+    const name=$('#nm').value.trim();
+    if(!name){ $('#err').textContent='ใส่ชื่อชุดก่อน'; $('#nm').focus(); return; }
+    const id=cur&&cur.editId?cur.editId:db.collection('costumes').doc().id;
+    const old=cur&&cur.editId?byId(cur.editId):null;
+    const d=body(old||{}); d.name=name; d.size=$('#sz').value.trim(); d.pre=$('#pr').value.trim(); d.test=$('#ts').value.trim(); d.img=pendingImg||'';
+    if(await save(id,d)){ closeModal(); toast(old?'บันทึกข้อมูลชุดแล้ว':'เพิ่มชุดแล้ว'); }
+    return;
+  }
+  if(a==='delcostume'&&c){
+    confirmBox('ลบ '+c.name+(c.booking?' (ตอนนี้ติดคิวอยู่)':'')+' ออกจากร้าน?','ลบชุด',async function(){
+      try{ await db.doc('costumes/'+c.id).delete(); closeModal(); toast('ลบชุดแล้ว'); }
+      catch(e){ toast('ลบไม่สำเร็จ ลองอีกครั้ง'); }
+    },c.id);
+    return;
+  }
+}
+
+document.addEventListener('click',function(e){
+  const t=e.target.closest('[data-tab],[data-chip],[data-open],[data-close],[data-act],[data-day],[data-cal]');
+  if(e.target===$('#modal')){ closeModal(); return; }
+  if(e.target.id==='addBtn'){ cur={}; costumeForm(null); return; }
+  if(!t) return;
+  if(t.dataset.tab){ tab=t.dataset.tab; document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',String(b===t))); render(); return; }
+  if(t.dataset.chip){ if(tab==='queue') fQ=t.dataset.chip; else fC=t.dataset.chip; render(); return; }
+  if(t.dataset.open){ showCostume(t.dataset.open); return; }
+  if('close' in t.dataset){ closeModal(); return; }
+  if(t.dataset.day){ pickDay(t.dataset.day); return; }
+  if(t.dataset.cal){ cal.m+=+t.dataset.cal; if(cal.m<0){cal.m=11;cal.y--;} if(cal.m>11){cal.m=0;cal.y++;} renderCal(); return; }
+  if(t.dataset.act){ act(t.dataset.act); return; }
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('#modal').hidden) closeModal(); });
+document.addEventListener('change',async function(e){
+  if(e.target.id!=='file'||!e.target.files[0]) return;
+  try{
+    pendingImg=await resize(e.target.files[0]);
+    $('#pv').innerHTML='<img src="'+pendingImg+'" alt="">';
+  }catch(err){ toast('เปิดรูปนี้ไม่ได้ ลองรูปอื่น'); }
+});
+$('#q').addEventListener('input',e=>{ q=e.target.value; if(loaded) render(); });
+
+/* ---------- local storage (IndexedDB) so the page works on its own ---------- */
+function makeLocalDb(){
+  return new Promise(function(resolve){
+    const mem=new Map(), subs=new Set(); let idb=null;
+    const snap=()=>({docs:Array.from(mem.entries()).map(e=>({id:e[0],data:()=>e[1]}))});
+    const notify=()=>{ const sn=snap(); subs.forEach(f=>f(sn)); };
+    const put=(id,d)=>{ if(!idb) return Promise.resolve(); return new Promise((ok,no)=>{ const r=idb.transaction('costumes','readwrite').objectStore('costumes').put(Object.assign({id:id},d)); r.onsuccess=ok; r.onerror=()=>no(r.error); }); };
+    const del=id=>{ if(!idb) return Promise.resolve(); return new Promise((ok,no)=>{ const r=idb.transaction('costumes','readwrite').objectStore('costumes').delete(id); r.onsuccess=ok; r.onerror=()=>no(r.error); }); };
+    const api={
+      collection:()=>({
+        doc:id=>({id:id||('c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7))}),
+        onSnapshot:next=>{ subs.add(next); next(snap()); return ()=>subs.delete(next); }
+      }),
+      doc:path=>{ const id=path.split('/')[1]; return {
+        set:async d=>{ await put(id,d); mem.set(id,d); notify(); },
+        delete:async()=>{ await del(id); mem.delete(id); notify(); }
+      }; },
+      all:()=>Array.from(mem.entries()).map(e=>Object.assign({id:e[0]},e[1]))
+    };
+    let done=false; const fin=()=>{ if(!done){ done=true; resolve(api); } };
+    try{
+      const rq=indexedDB.open('knoc-rental',1);
+      rq.onupgradeneeded=()=>rq.result.createObjectStore('costumes',{keyPath:'id'});
+      rq.onerror=()=>{ toast('เครื่องนี้เก็บข้อมูลถาวรไม่ได้ ข้อมูลจะหายเมื่อปิดหน้า'); fin(); };
+      rq.onsuccess=()=>{
+        idb=rq.result;
+        const g=idb.transaction('costumes').objectStore('costumes').getAll();
+        g.onsuccess=()=>{ g.result.forEach(r=>{ const id=r.id; delete r.id; mem.set(id,r); }); fin(); };
+        g.onerror=()=>fin();
+      };
+    }catch(e){ toast('เครื่องนี้เก็บข้อมูลถาวรไม่ได้ ข้อมูลจะหายเมื่อปิดหน้า'); fin(); }
+    setTimeout(fin,4000);
+  });
+}
+function exportData(){
+  const data=JSON.stringify({app:'KNOC',version:1,costumes:db.all()});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+  a.download='KNOC-backup-'+todayIso()+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('บันทึกไฟล์สำรองข้อมูลแล้ว');
+}
+async function importData(file){
+  try{
+    const j=JSON.parse(await file.text());
+    if(!j||!Array.isArray(j.costumes)) throw new Error('bad');
+    for(const c of j.costumes){ const id=c.id; const d=body(c); await db.doc('costumes/'+id).set(d); }
+    toast('นำเข้า '+j.costumes.length+' ชุดแล้ว');
+  }catch(e){ toast('ไฟล์นี้ไม่ใช่ไฟล์สำรองของ KNOC'); }
+}
+$('#exportBtn').addEventListener('click',()=>{ if(db) exportData(); });
+$('#importFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(f&&db) importData(f); e.target.value=''; });
+
+/* ---------- start ---------- */
+render();
+(async function(){
+  let tm=setTimeout(()=>{ if(!loaded) $('#content').innerHTML='<div class="empty"><h2>ยังโหลดข้อมูลไม่ได้</h2>เช็กอินเทอร์เน็ตแล้วรอสักครู่ หรือเปิดหน้านี้ใหม่</div>'; },10000);
+  try{ db=await makeLocalDb(); }catch(e){ db=null; }
+  if(!db){ clearTimeout(tm); $('#content').innerHTML='<div class="empty"><h2>เปิดข้อมูลร้านไม่ได้</h2>ลองเปิดไฟล์นี้ด้วย Chrome หรือ Safari</div>'; return; }
+  db.collection('costumes').onSnapshot(function(snap){
+    clearTimeout(tm);
+    costumes=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+    loaded=true; render();
+  },function(){
+    clearTimeout(tm);
+    $('#content').innerHTML='<div class="empty"><h2>โหลดข้อมูลไม่สำเร็จ</h2>เปิดหน้านี้ใหม่อีกครั้ง</div>';
+  });
+})();
+})();
+</script>
+</body>
+</html>
