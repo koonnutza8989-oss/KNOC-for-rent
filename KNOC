@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KNOC คิวเช่าชุด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: sticky header with counts, two tabs (queue list / all costumes grid), bottom-sheet dialogs. Chocolate-mint palette. */
+  --mint-bg:#e9f6ef;
+  --mint:#bfe6d3;
+  --mint-deep:#2a8f6e;
+  --choc:#4a2b22;
+  --choc-soft:#7b5a4d;
+  --cream:#fffaf3;
+  --line:#cfe3d8;
+  --caramel:#b9772a;
+  --danger:#b8352a;
+  --font-display:'Mali','Noto Sans Thai',sans-serif;
+  --font-body:'Noto Sans Thai',system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--mint-bg);color:var(--choc);font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+body.lock{overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--mint-deep);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+
+header.top{background:var(--choc);color:var(--cream);padding:14px 0 16px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand h1{font-family:var(--font-display);font-size:1.5rem;margin:0;font-weight:700;letter-spacing:.2px}
+.brand span{color:var(--mint);font-size:.95rem}
+.hb{margin-left:auto;display:flex;gap:6px}
+.hbtn{background:rgba(255,255,255,.12);color:var(--cream);border:0;border-radius:999px;padding:6px 12px;font-size:.88rem;cursor:pointer;min-height:36px;display:inline-flex;align-items:center}
+.stats{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.stat{background:rgba(255,255,255,.1);border-radius:12px;padding:6px 12px;display:flex;gap:8px;align-items:baseline}
+.stat b{font-family:var(--font-display);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.stat small{color:var(--mint);font-size:.85rem}
+.stat.warn b{color:#ffb4a8}
+
+.bar{position:sticky;top:0;z-index:5;background:var(--mint-bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:6px;background:#d3ebdf;padding:5px;border-radius:999px}
+.tab{flex:1;border:0;background:transparent;padding:10px 12px;border-radius:999px;font-weight:700;color:var(--choc-soft)}
+.tab[aria-selected="true"]{background:var(--choc);color:var(--cream)}
+.tools{display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap}
+.search{flex:1 1 220px;position:relative}
+.search input{width:100%;border:1.5px solid var(--line);background:var(--cream);border-radius:999px;padding:10px 16px 10px 40px;min-height:44px}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--choc-soft)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:var(--cream);border-radius:999px;padding:6px 12px;font-size:.92rem;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--mint-deep);border-color:var(--mint-deep);color:#fff}
+.btn-add{background:var(--mint-deep);color:#fff;border:0;border-radius:999px;padding:10px 18px;font-weight:700;min-height:44px}
+
+main{padding:16px 0 60px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.card{background:var(--cream);border:1.5px solid var(--line);border-radius:16px;overflow:hidden;text-align:left;padding:0;display:flex;flex-direction:column}
+.card .ph{aspect-ratio:3/4;background:var(--mint);position:relative}
+.card .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.card .ph .badge{position:absolute;left:8px;top:8px}
+.card .info{padding:10px 12px 12px}
+.card h3{margin:0;font-size:1rem;font-weight:700;overflow-wrap:anywhere}
+.card .meta{display:flex;justify-content:space-between;color:var(--choc-soft);font-size:.9rem;margin-top:2px;font-variant-numeric:tabular-nums}
+.noimg{width:100%;height:100%;display:grid;place-items:center;font-family:var(--font-display);font-size:2.4rem;color:var(--mint-deep);background:linear-gradient(135deg,#d6efe2,#bfe6d3)}
+
+.qlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+.qrow{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:center;background:var(--cream);border:1.5px solid var(--line);border-radius:16px;padding:10px;text-align:left;width:100%}
+.qrow.late{border-color:var(--danger);box-shadow:inset 5px 0 0 var(--danger)}
+.qrow .th{width:64px;height:80px;border-radius:10px;overflow:hidden;background:var(--mint)}
+.qrow .th img{width:100%;height:100%;object-fit:cover;display:block}
+.qrow .th .noimg{font-size:1.5rem}
+.qrow h3{margin:0;font-size:1rem;overflow-wrap:anywhere}
+.qrow .fb{margin:0;color:var(--choc-soft);font-size:.92rem;overflow-wrap:anywhere}
+.qrow .dates{margin:4px 0 0;font-variant-numeric:tabular-nums}
+.qrow .dates b{font-weight:700}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.82rem;font-weight:700;line-height:1.5}
+.b-free{background:var(--mint);color:#17503c}
+.b-busy{background:var(--choc);color:var(--cream)}
+.b-res{background:#f4dfbd;color:#6e4510}
+.b-paid{background:var(--mint-deep);color:#fff}
+.b-late{background:var(--danger);color:#fff}
+.b-today{background:#f4dfbd;color:#6e4510}
+.empty{text-align:center;color:var(--choc-soft);padding:48px 16px;background:var(--cream);border:1.5px dashed var(--line);border-radius:16px}
+.empty h2{font-family:var(--font-display);margin:0 0 6px;color:var(--choc);font-size:1.2rem}
+.note{color:var(--choc-soft);font-size:.9rem;margin:0 0 10px}
+
+/* dialogs */
+.modal{position:fixed;inset:0;z-index:20;background:rgba(74,43,34,.5);display:flex;align-items:flex-end;justify-content:center}
+.modal[hidden]{display:none}
+.sheet{background:var(--cream);width:100%;max-width:560px;max-height:94%;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px 24px}
+@media (min-width:700px){.modal{align-items:center}.sheet{border-radius:22px;max-height:92%}}
+.sheet h2{font-family:var(--font-display);margin:0;font-size:1.25rem}
+.shead{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;margin-bottom:14px}
+.shead .th{width:72px;height:92px;border-radius:12px;overflow:hidden;background:var(--mint)}
+.shead .th img{width:100%;height:100%;object-fit:cover}
+.shead p{margin:2px 0 0;color:var(--choc-soft);font-size:.92rem}
+.x{border:0;background:#e3f1ea;border-radius:50%;width:40px;height:40px;font-size:1.3rem;line-height:1}
+.sec{border-top:1.5px solid var(--line);padding-top:14px;margin-top:6px}
+.sec h3{margin:0 0 10px;font-size:1rem}
+label.f{display:block;font-weight:500;margin:0 0 12px}
+label.f span{display:block;font-size:.9rem;color:var(--choc-soft);margin-bottom:4px}
+.in{width:100%;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;min-height:46px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px;text-align:center;font-weight:700;min-height:46px;cursor:pointer}
+.seg input:checked+label{background:var(--choc);color:var(--cream);border-color:var(--choc)}
+.seg input:focus-visible+label{outline:3px solid var(--mint-deep);outline-offset:2px}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:12px;font-weight:700;min-height:48px;margin-top:8px}
+.btn.main{background:var(--mint-deep);color:#fff}
+.btn.choc{background:var(--choc);color:var(--cream)}
+.btn.soft{background:#e3f1ea;color:var(--choc)}
+.btn.danger{background:#fff;color:var(--danger);border:1.5px solid var(--danger)}
+.btn.link{background:transparent;color:var(--choc-soft);text-decoration:underline;min-height:40px}
+.err{color:var(--danger);font-size:.92rem;min-height:1.3em;margin:4px 0 0}
+.big{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.big .k{font-size:.85rem;color:var(--choc-soft)}
+.big .v{font-family:var(--font-display);font-size:1.15rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.big.late{border-color:var(--danger)}
+.dr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* calendar picker */
+.cal{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cal-head button{border:0;background:#e3f1ea;border-radius:10px;width:42px;height:42px;font-size:1.3rem}
+.cal-head strong{font-family:var(--font-display)}
+.cal-wd,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-wd span{text-align:center;font-size:.8rem;color:var(--choc-soft);padding:2px 0}
+.day{border:0;background:transparent;border-radius:10px;aspect-ratio:1/1;min-height:38px;font-variant-numeric:tabular-nums}
+.day.today{box-shadow:inset 0 0 0 2px var(--mint-deep)}
+.day.rng{background:var(--mint);border-radius:0}
+.day.s,.day.e{background:var(--choc);color:var(--cream);border-radius:10px;font-weight:700}
+.day.s.rng-end-open{border-radius:10px}
+.sum{font-weight:500;margin:6px 0 10px;min-height:1.5em;font-variant-numeric:tabular-nums}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--choc);color:var(--cream);padding:10px 18px;border-radius:999px;z-index:40;font-weight:500;max-width:90%}
+.toast[hidden]{display:none}
+.imgpick{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;margin-bottom:12px}
+.imgpick .pv{width:96px;height:120px;border-radius:12px;overflow:hidden;background:var(--mint)}
+.imgpick .pv img{width:100%;height:100%;object-fit:cover}
+.fileb{display:inline-block;background:#e3f1ea;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;min-height:44px}
+.fileb input{position:absolute;opacity:0;width:1px;height:1px}
+.fileb:focus-within{outline:3px solid var(--mint-deep);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><h1>KNOC</h1><span>ระบบคิวเช่าชุด</span><span class="hb"><button type="button" class="hbtn" id="exportBtn">สำรองข้อมูล</button><label class="hbtn">นำเข้าข้อมูล<input type="file" id="importFile" accept=".json,application/json" hidden></label></span></div>
+    <div class="stats" id="stats"></div>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-queue" data-tab="queue" aria-selected="true">เช็คคิวเช่าชุด</button>
+      <button class="tab" role="tab" id="tab-shop" data-tab="shop" aria-selected="false">ชุดทั้งหมดในร้าน</button>
+    </div>
+    <div class="tools">
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="q" type="search" placeholder="ค้นหาชื่อชุด" aria-label="ค้นหาชื่อชุด" autocomplete="off">
+      </label>
+      <div class="chips" id="chips"></div>
+      <button class="btn-add" id="addBtn" type="button" hidden>+ เพิ่มชุดใหม่</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="content" aria-live="polite"></main>
+
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const TH_M=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const WD=['อา','จ','อ','พ','พฤ','ศ','ส'];
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const iso=(y,m,d)=>y+'-'+pad(m+1)+'-'+pad(d);
+const todayIso=()=>{const n=new Date();return iso(n.getFullYear(),n.getMonth(),n.getDate());};
+const fmt=s=>{const p=s.split('-');return (+p[2])+'/'+(+p[1])+'/'+p[0];};
+const ms=s=>{const p=s.split('-').map(Number);return Date.UTC(p[0],p[1]-1,p[2]);};
+const dayDiff=(a,b)=>Math.round((ms(b)-ms(a))/864e5);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let db=null, costumes=[], loaded=false, tab='queue', q='', fQ='all', fC='all';
+let cur=null, cal=null, pendingImg=null, toastT=null;
+
+const byId=id=>costumes.find(c=>c.id===id);
+function info(c){
+  const b=c.booking;
+  if(!b) return {busy:false};
+  const t=todayIso();
+  const late=b.end<t;
+  return {busy:true,late:late,days:late?dayDiff(b.end,t):0,dueToday:b.end===t};
+}
+const body=c=>({name:c.name||'',size:c.size||'',pre:c.pre!=null?c.pre:(c.price!=null?c.price:''),test:c.test==null?'':c.test,img:c.img||'',booking:c.booking||null});
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},2600);}
+async function save(id,data){
+  try{ await db.doc('costumes/'+id).set(data); return true; }
+  catch(e){ toast('บันทึกไม่สำเร็จ ลองอีกครั้ง'); return false; }
+}
+function thumb(c){return c.img?'<img src="'+c.img+'" alt="">':'<div class="noimg">'+esc((c.name||'?').trim().charAt(0).toUpperCase())+'</div>';}
+const gp=(c,k)=>{const v=k==='pre'?(c.pre!=null?c.pre:c.price):c.test;return (v===''||v==null)?'':String(v);};
+function priceTxt(c){
+  const a=gp(c,'pre'),b=gp(c,'test'),o=[];
+  if(a) o.push('ไพร '+esc(a)); if(b) o.push('เทส '+esc(b));
+  return o.join(' · ');
+}
+
+/* ---------- list rendering ---------- */
+function stats(){
+  let free=0,busy=0,late=0;
+  costumes.forEach(c=>{const i=info(c); if(i.busy){busy++; if(i.late)late++;} else free++;});
+  $('#stats').innerHTML=
+    '<div class="stat"><b>'+free+'</b><small>คิวว่าง</small></div>'+
+    '<div class="stat"><b>'+busy+'</b><small>ติดคิว</small></div>'+
+    '<div class="stat'+(late?' warn':'')+'"><b>'+late+'</b><small>เลยกำหนดคืน</small></div>';
+}
+function chips(){
+  const defs=tab==='queue'
+    ?[['all','ทั้งหมด'],['res','จอง'],['paid','ชำระแล้ว'],['late','เลยกำหนดคืน']]
+    :[['all','ทั้งหมด'],['free','คิวว่าง'],['busy','ติดคิว']];
+  const cv=tab==='queue'?fQ:fC;
+  $('#chips').innerHTML=defs.map(d=>'<button type="button" class="chip" data-chip="'+d[0]+'" aria-pressed="'+(cv===d[0])+'">'+d[1]+'</button>').join('');
+  $('#addBtn').hidden=tab!=='shop';
+}
+function match(c){
+  const s=q.trim().toLowerCase();
+  if(!s) return true;
+  if((c.name||'').toLowerCase().includes(s)) return true;
+  if(tab==='queue'&&c.booking&&(c.booking.fb||'').toLowerCase().includes(s)) return true;
+  return false;
+}
+function renderQueue(){
+  let list=costumes.filter(c=>c.booking&&match(c));
+  const all=costumes.filter(c=>c.booking).length;
+  list=list.filter(c=>{
+    const i=info(c);
+    if(fQ==='res') return !c.booking.paid;
+    if(fQ==='paid') return c.booking.paid;
+    if(fQ==='late') return i.late;
+    return true;
+  });
+  list.sort((a,b)=>{
+    const ia=info(a),ib=info(b);
+    if(ia.late!==ib.late) return ia.late?-1:1;
+    if(ia.late) return ib.days-ia.days;
+    return a.booking.start<b.booking.start?-1:a.booking.start>b.booking.start?1:0;
+  });
+  if(!list.length){
+    $('#content').innerHTML=all
+      ?'<div class="empty"><h2>ไม่พบคิวที่ตรงกับที่เลือก</h2>ลองเปลี่ยนตัวกรองหรือคำค้นหา</div>'
+      :'<div class="empty"><h2>ยังไม่มีคิวเช่า</h2>ไปที่แท็บ “ชุดทั้งหมดในร้าน” แล้วกดชุดที่ว่างเพื่อลงคิว</div>';
+    return;
+  }
+  $('#content').innerHTML='<p class="note">เลยกำหนดคืนขึ้นก่อน ที่เหลือเรียงตามวันที่ลูกค้าใช้</p><div class="qlist">'+list.map(c=>{
+    const i=info(c),b=c.booking;
+    return '<button type="button" class="qrow'+(i.late?' late':'')+'" data-open="'+c.id+'">'+
+      '<span class="th">'+thumb(c)+'</span>'+
+      '<span><h3>'+esc(c.name)+'</h3>'+
+      '<p class="fb">FB: '+esc(b.fb)+'</p>'+
+      '<p class="dates"><b>'+fmt(b.start)+'</b> ถึง <b>'+fmt(b.end)+'</b></p>'+
+      '<span class="tags"><span class="badge '+(b.paid?'b-paid':'b-res')+'">'+(b.paid?'ชำระแล้ว':'จอง')+'</span>'+
+      (i.late?'<span class="badge b-late">เลยกำหนด '+i.days+' วัน</span>':'')+
+      (i.dueToday?'<span class="badge b-today">ต้องคืนวันนี้</span>':'')+
+      '</span></span></button>';
+  }).join('')+'</div>';
+}
+function renderShop(){
+  let list=costumes.filter(match).filter(c=>fC==='all'||(fC==='free'?!c.booking:!!c.booking));
+  list.sort((a,b)=>(a.name||'').localeCompare(b.name||'','th'));
+  if(!list.length){
+    $('#content').innerHTML=costumes.length
+      ?'<div class="empty"><h2>ไม่พบชุดที่ค้นหา</h2>ลองพิมพ์ชื่อชุดใหม่ หรือเปลี่ยนตัวกรอง</div>'
+      :'<div class="empty"><h2>ยังไม่มีชุดในร้าน</h2>กด “+ เพิ่มชุดใหม่” ด้านบนเพื่อใส่ชุดตัวแรก</div>';
+    return;
+  }
+  $('#content').innerHTML='<div class="grid">'+list.map(c=>{
+    const i=info(c);
+    return '<button type="button" class="card" data-open="'+c.id+'">'+
+      '<span class="ph">'+thumb(c)+'<span class="badge '+(i.busy?'b-busy':'b-free')+'">'+(i.busy?'ติดคิว':'คิวว่าง')+'</span></span>'+
+      '<span class="info"><h3>'+esc(c.name)+'</h3>'+(c.size?'<span class="meta"><span>ไซส์ '+esc(c.size)+'</span></span>':'')+'<span class="meta"><span>ไพร '+(esc(gp(c,'pre'))||'-')+'</span><span>เทส '+(esc(gp(c,'test'))||'-')+'</span></span></span></button>';
+  }).join('')+'</div>';
+}
+function render(){
+  if(!loaded){ $('#content').innerHTML='<div class="empty"><h2>กำลังโหลด…</h2></div>'; return; }
+  stats(); chips();
+  if(tab==='queue') renderQueue(); else renderShop();
+}
+
+/* ---------- dialogs ---------- */
+function openModal(html){ $('#sheet').innerHTML=html; $('#modal').hidden=false; document.body.classList.add('lock'); $('#sheet').scrollTop=0; }
+function closeModal(){ $('#modal').hidden=true; $('#sheet').innerHTML=''; document.body.classList.remove('lock'); cur=null; cal=null; pendingImg=null; }
+function head(c){
+  const i=info(c);
+  return '<div class="shead"><span class="th">'+thumb(c)+'</span><div><h2>'+esc(c.name)+'</h2><p>'+(c.size?'ไซส์ '+esc(c.size):'')+(c.size&&priceTxt(c)?' · ':'')+priceTxt(c)+'</p>'+
+    '<p><span class="badge '+(i.busy?'b-busy':'b-free')+'">'+(i.busy?'ติดคิว':'คิวว่าง')+'</span></p></div>'+
+    '<button type="button" class="x" data-close aria-label="ปิด">×</button></div>';
+}
+function showCostume(id){
+  const c=byId(id); if(!c) return;
+  cur={id:id};
+  if(!c.booking){ openModal(head(c)+bookingForm(c,null)); initBook(null); }
+  else openModal(head(c)+bookedView(c));
+}
+function bookingForm(c,b){
+  const paid=b&&b.paid;
+  return '<div class="sec"><h3>'+(b?'แก้ไขคิว':'ลงคิวเช่า')+'</h3>'+
+    '<label class="f"><span>ชื่อ FB ลูกค้า</span><input class="in" id="fb" autocomplete="off" value="'+esc(b?b.fb:'')+'" placeholder="เช่น ชื่อในเฟส"></label>'+
+    '<div class="f"><span style="display:block;font-size:.9rem;color:var(--choc-soft);margin-bottom:4px">เลือกวันที่ลูกค้าใช้ แล้วเลือกวันที่ต้องส่งคืน</span><div class="cal" id="cal"></div><div class="sum" id="sum"></div></div>'+
+    '<div class="seg"><input type="radio" name="pay" id="pay-res" value="res"'+(paid?'':' checked')+'><label for="pay-res">จอง</label>'+
+    '<input type="radio" name="pay" id="pay-paid" value="paid"'+(paid?' checked':'')+'><label for="pay-paid">ชำระแล้ว</label></div>'+
+    '<p class="err" id="err" role="alert"></p>'+
+    '<button type="button" class="btn main" data-act="savebook">'+(b?'บันทึกการแก้ไข':'บันทึกคิว')+'</button>'+
+    (b?'<button type="button" class="btn link" data-act="back">ย้อนกลับ</button>':'<button type="button" class="btn link" data-act="editcostume">แก้ไขข้อมูลชุด</button>')+
+    '</div>';
+}
+function initBook(b){
+  const n=new Date();
+  cal=b?{y:+b.start.slice(0,4),m:+b.start.slice(5,7)-1,start:b.start,end:b.end}:{y:n.getFullYear(),m:n.getMonth(),start:null,end:null};
+  renderCal();
+}
+function rend
