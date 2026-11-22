@@ -97,6 +97,7 @@ main{padding:16px 0 60px}
 .b-busy{background:var(--chocbg);color:var(--oncho)}
 .b-res{background:var(--amber-bg);color:var(--amber-fg)}
 .b-paid{background:var(--mint-deep);color:var(--on-mint)}
+.b-ret{background:var(--mint);color:var(--free-fg);box-shadow:inset 0 0 0 1.5px var(--mint-deep)}
 .b-late{background:var(--danger);color:#fff}
 .b-today{background:var(--amber-bg);color:var(--amber-fg)}
 .empty{text-align:center;color:var(--choc-soft);padding:64px 16px;background:var(--cream);border:1.5px dashed var(--line);border-radius:16px}
@@ -172,7 +173,7 @@ label.f span{display:block;font-size:.9rem;color:var(--choc-soft);margin-bottom:
   <div class="wrap">
     <div class="brand"><h1>KNOC</h1><span>ระบบคิวเช่าชุด</span></div>
     <div class="stats" id="stats"></div>
-    <span class="hb"><button type="button" class="hbtn" id="themeBtn">โหมดมืด</button><button type="button" class="hbtn" id="exportBtn">สำรองข้อมูล</button>
+    <span class="hb"><button type="button" class="hbtn" id="themeBtn">โหมดมืด</button><button type="button" class="hbtn" id="custBtn">ส่งออกหน้าลูกค้า</button><button type="button" class="hbtn" id="exportBtn">สำรองข้อมูล</button>
     <label class="hbtn">นำเข้าข้อมูล<input type="file" id="importFile" accept=".json,application/json" hidden></label></span>
   </div>
 </header>
@@ -221,7 +222,8 @@ function info(c){
   if(!b) return {busy:false};
   const t=todayIso();
   const late=b.end<t;
-  return {busy:true,late:late,days:late?dayDiff(b.end,t):0,dueToday:b.end===t};
+  const ret=!!b.returned;
+  return {busy:true,ret:ret,late:late&&!ret,days:late?dayDiff(b.end,t):0,dueToday:!ret&&b.end===t};
 }
 const body=c=>({name:c.name||'',size:c.size||'',pre:c.pre!=null?c.pre:(c.price!=null?c.price:''),test:c.test==null?'':c.test,img:c.img||'',booking:c.booking||null});
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},2600);}
@@ -229,6 +231,7 @@ async function save(id,data){
   try{ await db.doc('costumes/'+id).set(data); return true; }
   catch(e){ toast('บันทึกไม่สำเร็จ ลองอีกครั้ง'); return false; }
 }
+function stBadge(i){ return i.busy?(i.ret?'<span class="badge b-ret">ลูกค้าส่งแล้ว</span>':'<span class="badge b-busy">ติดคิว</span>'):'<span class="badge b-free">คิวว่าง</span>'; }
 function thumb(c){return c.img?'<img src="'+c.img+'" alt="">':'<div class="noimg">'+esc((c.name||'?').trim().charAt(0).toUpperCase())+'</div>';}
 const gp=(c,k)=>{const v=k==='pre'?(c.pre!=null?c.pre:c.price):c.test;return (v===''||v==null)?'':String(v);};
 function priceTxt(c){
@@ -248,7 +251,7 @@ function stats(){
 }
 function chips(){
   const defs=tab==='queue'
-    ?[['all','ทั้งหมด'],['res','จอง'],['paid','ชำระแล้ว'],['late','เลยกำหนดคืน']]
+    ?[['all','ทั้งหมด'],['res','จอง'],['paid','ชำระแล้ว'],['ret','ส่งแล้ว'],['late','เลยกำหนดคืน']]
     :[['all','ทั้งหมด'],['free','คิวว่าง'],['busy','ติดคิว']];
   const cv=tab==='queue'?fQ:fC;
   $('#chips').innerHTML=defs.map(d=>'<button type="button" class="chip" data-chip="'+d[0]+'" aria-pressed="'+(cv===d[0])+'">'+d[1]+'</button>').join('');
@@ -266,8 +269,9 @@ function renderQueue(){
   const all=costumes.filter(c=>c.booking).length;
   list=list.filter(c=>{
     const i=info(c);
-    if(fQ==='res') return !c.booking.paid;
-    if(fQ==='paid') return c.booking.paid;
+    if(fQ==='res') return !c.booking.paid&&!i.ret;
+    if(fQ==='paid') return !!c.booking.paid&&!i.ret;
+    if(fQ==='ret') return i.ret;
     if(fQ==='late') return i.late;
     return true;
   });
@@ -275,6 +279,7 @@ function renderQueue(){
     const ia=info(a),ib=info(b);
     if(ia.late!==ib.late) return ia.late?-1:1;
     if(ia.late) return ib.days-ia.days;
+    if(ia.ret!==ib.ret) return ia.ret?1:-1;
     return a.booking.start<b.booking.start?-1:a.booking.start>b.booking.start?1:0;
   });
   if(!list.length){
@@ -290,7 +295,7 @@ function renderQueue(){
       '<span><h3>'+esc(c.name)+'</h3>'+
       '<p class="fb">FB: '+esc(b.fb)+'</p>'+
       '<p class="dates"><b>'+fmt(b.start)+'</b> ถึง <b>'+fmt(b.end)+'</b></p>'+
-      '<span class="tags"><span class="badge '+(b.paid?'b-paid':'b-res')+'">'+(b.paid?'ชำระแล้ว':'จอง')+'</span>'+
+      '<span class="tags">'+(i.ret?'<span class="badge b-ret">ลูกค้าส่งแล้ว</span>':'<span class="badge '+(b.paid?'b-paid':'b-res')+'">'+(b.paid?'ชำระแล้ว':'จอง')+'</span>')+
       (i.late?'<span class="badge b-late">เลยกำหนด '+i.days+' วัน</span>':'')+
       (i.dueToday?'<span class="badge b-today">ต้องคืนวันนี้</span>':'')+
       '</span></span></button>';
@@ -308,7 +313,7 @@ function renderShop(){
   $('#content').innerHTML='<div class="grid">'+list.map(c=>{
     const i=info(c);
     return '<button type="button" class="card" data-open="'+c.id+'">'+
-      '<span class="ph">'+thumb(c)+'<span class="badge '+(i.busy?'b-busy':'b-free')+'">'+(i.busy?'ติดคิว':'คิวว่าง')+'</span></span>'+
+      '<span class="ph">'+thumb(c)+''+stBadge(i)+'</span>'+
       '<span class="info"><h3>'+esc(c.name)+'</h3>'+(c.size?'<span class="meta"><span>ไซส์ '+esc(c.size)+'</span></span>':'')+'<span class="meta"><span>ไพร '+(esc(gp(c,'pre'))||'-')+'</span><span>เทส '+(esc(gp(c,'test'))||'-')+'</span></span></span></button>';
   }).join('')+'</div>';
 }
@@ -324,7 +329,7 @@ function closeModal(){ $('#modal').hidden=true; $('#sheet').innerHTML=''; docume
 function head(c){
   const i=info(c);
   return '<div class="shead"><span class="th">'+thumb(c)+'</span><div><h2>'+esc(c.name)+'</h2><p>'+(c.size?'ไซส์ '+esc(c.size):'')+(c.size&&priceTxt(c)?' · ':'')+priceTxt(c)+'</p>'+
-    '<p><span class="badge '+(i.busy?'b-busy':'b-free')+'">'+(i.busy?'ติดคิว':'คิวว่าง')+'</span></p></div>'+
+    '<p>'+stBadge(i)+'</p></div>'+
     '<button type="button" class="x" data-close aria-label="ปิด">×</button></div>';
 }
 function showCostume(id){
@@ -378,13 +383,17 @@ function pickDay(s){
 }
 function bookedView(c){
   const b=c.booking,i=info(c);
-  return '<div class="sec"><div class="big"><div class="k">ลูกค้า (FB)</div><div class="v">'+esc(b.fb)+'</div></div>'+
+  const top='<div class="sec"><div class="big"><div class="k">ลูกค้า (FB)</div><div class="v">'+esc(b.fb)+'</div></div>'+
     '<div class="dr"><div class="big"><div class="k">วันที่ลูกค้าใช้</div><div class="v">'+fmt(b.start)+'</div></div>'+
-    '<div class="big'+(i.late?' late':'')+'"><div class="k">วันที่ต้องส่งคืน</div><div class="v">'+fmt(b.end)+'</div></div></div>'+
-    '<p style="margin:0 0 10px"><span class="badge '+(b.paid?'b-paid':'b-res')+'">'+(b.paid?'ชำระแล้ว':'จอง')+'</span> '+
+    '<div class="big'+(i.late?' late':'')+'"><div class="k">วันที่ต้องส่งคืน</div><div class="v">'+fmt(b.end)+'</div></div></div>';
+  if(i.ret) return top+'<p style="margin:0 0 10px"><span class="badge b-ret">ลูกค้าส่งแล้ว</span></p>'+
+    '<button type="button" class="btn main" data-act="release">ปล่อยเป็นคิวว่าง</button>'+
+    '<button type="button" class="btn soft" data-act="unreturn">ยังไม่ได้รับคืน (ย้อนกลับ)</button>'+
+    '<button type="button" class="btn link" data-act="editcostume">แก้ไขข้อมูลชุด</button></div>';
+  return top+'<p style="margin:0 0 10px"><span class="badge '+(b.paid?'b-paid':'b-res')+'">'+(b.paid?'ชำระแล้ว':'จอง')+'</span> '+
     (i.late?'<span class="badge b-late">เลยกำหนดคืน '+i.days+' วัน</span>':'')+(i.dueToday?'<span class="badge b-today">ต้องคืนวันนี้</span>':'')+'</p>'+
     (b.paid?'<button type="button" class="btn soft" data-act="setres">เปลี่ยนกลับเป็นจอง</button>':'<button type="button" class="btn main" data-act="setpaid">เปลี่ยนเป็นชำระแล้ว</button>')+
-    '<button type="button" class="btn choc" data-act="returned">ลูกค้าส่งคืนแล้ว</button>'+
+    '<button type="button" class="btn choc" data-act="returned">ลูกค้าส่งแล้ว</button>'+
     '<button type="button" class="btn soft" data-act="editbook">แก้ชื่อ / วันที่</button>'+
     '<button type="button" class="btn danger" data-act="cancel">ยกเลิกจอง</button>'+
     '<button type="button" class="btn link" data-act="editcostume">แก้ไขข้อมูลชุด</button></div>';
@@ -456,11 +465,16 @@ async function act(a){
     if(await save(c.id,d)){ closeModal(); toast(a==='setpaid'?'เปลี่ยนเป็นชำระแล้ว':'เปลี่ยนกลับเป็นจอง'); }
     return;
   }
-  if((a==='cancel'||a==='returned')&&c){
-    const isC=a==='cancel';
-    confirmBox(isC?'ยกเลิกจองของ '+c.booking.fb+' ?':'ลูกค้าส่ง '+c.name+' คืนแล้ว?',isC?'ยกเลิกจอง':'คืนแล้ว ปล่อยเป็นคิวว่าง',async function(){
+  if((a==='returned'||a==='unreturn'||a==='release')&&c){
+    const d=body(c);
+    if(a==='release') d.booking=null; else d.booking=Object.assign({},c.booking,{returned:a==='returned'});
+    if(await save(c.id,d)){ closeModal(); toast(a==='returned'?'บันทึกแล้ว ลูกค้าส่งแล้ว':a==='unreturn'?'ย้อนกลับแล้ว':'ปล่อยเป็นคิวว่างแล้ว'); }
+    return;
+  }
+  if(a==='cancel'&&c){
+    confirmBox('ยกเลิกจองของ '+c.booking.fb+' ?','ยกเลิกจอง',async function(){
       const d=body(c); d.booking=null;
-      if(await save(c.id,d)){ closeModal(); toast(isC?'ยกเลิกจองแล้ว ชุดกลับเป็นคิวว่าง':'รับคืนแล้ว ชุดกลับเป็นคิวว่าง'); }
+      if(await save(c.id,d)){ closeModal(); toast('ยกเลิกจองแล้ว ชุดกลับเป็นคิวว่าง'); }
     },c.id);
     return;
   }
@@ -579,6 +593,103 @@ $('#themeBtn').addEventListener('click',()=>applyTheme(document.documentElement.
 applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light',false);
 $('#exportBtn').addEventListener('click',()=>{ if(db) exportData(); });
 $('#importFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(f&&db) importData(f); e.target.value=''; });
+
+/* ---------- customer page export (read-only snapshot) ---------- */
+function customerApp(D){
+  var $=function(x){return document.querySelector(x);};
+  var q='',f='all';
+  var esc=function(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+  var fmt=function(t){var p=t.split('-');return (+p[2])+'/'+(+p[1])+'/'+p[0];};
+  var u=D.updated.split('-'); $('#upd').textContent='อัปเดต '+(+u[2])+'/'+(+u[1])+'/'+u[0];
+  function chips(){
+    var d=[['all','ทั้งหมด'],['free','ว่าง'],['busy','ไม่ว่าง']];
+    $('#chips').innerHTML=d.map(function(x){return '<button type="button" class="chip" data-f="'+x[0]+'" aria-pressed="'+(f===x[0])+'">'+x[1]+'</button>';}).join('');
+  }
+  function render(){
+    var list=D.items.filter(function(c){
+      if(q&&(c.name||'').toLowerCase().indexOf(q)<0) return false;
+      if(f==='free') return !c.b;
+      if(f==='busy') return !!c.b;
+      return true;
+    });
+    if(!list.length){ $('#list').innerHTML='<div class="empty"><h2>'+(D.items.length?'ไม่พบชุดที่ค้นหา':'ยังไม่มีชุด')+'</h2></div>'; return; }
+    $('#list').innerHTML='<div class="grid">'+list.map(function(c){
+      var img=c.img?'<img src="'+c.img+'" alt="">':'<div class="noimg">'+esc((c.name||'?').charAt(0).toUpperCase())+'</div>';
+      return '<article class="card"><div class="ph">'+img+'<span class="badge '+(c.b?'b-busy':'b-free')+'">'+(c.b?'ไม่ว่าง':'ว่าง')+'</span></div><div class="info"><h3>'+esc(c.name)+'</h3>'+
+        (c.size?'<p class="m">ไซส์ '+esc(c.size)+'</p>':'')+
+        '<p class="m">ไพร '+(esc(c.pre)||'-')+' · เทส '+(esc(c.test)||'-')+'</p>'+
+        (c.b?'<p class="d">ไม่ว่าง '+fmt(c.b[0])+' ถึง '+fmt(c.b[1])+'</p>':'')+'</div></article>';
+    }).join('')+'</div>';
+  }
+  $('#q').addEventListener('input',function(e){ q=e.target.value.trim().toLowerCase(); render(); });
+  $('#chips').addEventListener('click',function(e){ var b=e.target.closest('[data-f]'); if(!b) return; f=b.getAttribute('data-f'); chips(); render(); });
+  chips(); render();
+}
+const CUST_CSS=`:root{--bg:#e9f6ef;--card:#fffaf3;--ink:#4a2b22;--soft:#7b5a4d;--line:#cfe3d8;--mint:#bfe6d3;--deep:#2a8f6e;--head:#4a2b22;--oncho:#fffaf3;--busy:#4a2b22;--free-fg:#17503c;--on-deep:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#111915;--card:#1b2621;--ink:#f0e6dc;--soft:#b8a99d;--line:#304339;--mint:#2c5645;--deep:#43c297;--head:#2a1914;--oncho:#fff3e8;--busy:#5b372c;--free-fg:#bff0dc;--on-deep:#06241a;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+header.top{background:var(--head);color:var(--oncho);padding:8px 0}header .wrap{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h1{font-family:'Mali','Noto Sans Thai',sans-serif;font-size:1.3rem;margin:0}header span{color:var(--mint)}header small{margin-left:auto;opacity:.75}
+.bar{position:sticky;top:0;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);z-index:5}
+.bar input{width:100%;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:10px 16px;min-height:44px;font:inherit}
+.chips{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;font-size:.92rem;min-height:36px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--deep);border-color:var(--deep);color:var(--on-deep)}
+main{padding:16px 0 50px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;overflow:hidden}
+.ph{aspect-ratio:3/4;background:var(--mint);position:relative}.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.noimg{width:100%;height:100%;display:grid;place-items:center;font-size:2.4rem;color:var(--deep)}
+.badge{position:absolute;left:8px;top:8px;border-radius:999px;padding:2px 10px;font-size:.82rem;font-weight:700}
+.b-free{background:var(--mint);color:var(--free-fg)}.b-busy{background:var(--busy);color:var(--oncho)}
+.info{padding:10px 12px 12px}h3{margin:0;font-size:1rem;overflow-wrap:anywhere}
+.m{margin:2px 0 0;color:var(--soft);font-size:.9rem}.d{margin:6px 0 0;font-size:.88rem;font-weight:700;font-variant-numeric:tabular-nums}
+.empty{text-align:center;padding:64px 16px;background:var(--card);border:1.5px dashed var(--line);border-radius:16px}.empty h2{margin:0;font-family:'Mali','Noto Sans Thai',sans-serif;font-size:1.3rem}`;
+function thumbOf(url){
+  return new Promise(function(res){
+    if(!url){ res(''); return; }
+    const im=new Image();
+    im.onload=function(){
+      const k=Math.min(1,360/Math.max(im.width,im.height));
+      const cv=document.createElement('canvas'); cv.width=Math.round(im.width*k); cv.height=Math.round(im.height*k);
+      const cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); cx.drawImage(im,0,0,cv.width,cv.height);
+      res(cv.toDataURL('image/jpeg',.7));
+    };
+    im.onerror=function(){ res(''); };
+    im.src=url;
+  });
+}
+async function exportCustomer(){
+  if(!costumes.length){ toast('ยังไม่มีชุดในร้าน'); return; }
+  toast('กำลังสร้างไฟล์…');
+  const items=[];
+  const sorted=costumes.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','th'));
+  for(const c of sorted){
+    items.push({name:c.name||'',size:c.size||'',pre:gp(c,'pre'),test:gp(c,'test'),img:await thumbOf(c.img),b:c.booking?[c.booking.start,c.booking.end]:null});
+  }
+  const json=JSON.stringify({updated:todayIso(),items:items}).replace(/</g,'\\u003c');
+  const html='<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>KNOC ชุดให้เช่า</title>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet"><style>'+CUST_CSS+'</style></head><body>'+
+    '<header class="top"><div class="wrap"><h1>KNOC</h1><span>ชุดให้เช่า</span><small id="upd"></small></div></header>'+
+    '<div class="bar"><div class="wrap"><input id="q" type="search" placeholder="ค้นหาชื่อชุด" aria-label="ค้นหาชื่อชุด" autocomplete="off"><div class="chips" id="chips"></div></div></div>'+
+    '<main class="wrap" id="list"></main><script>('+customerApp.toString()+')('+json+');<\/script></body></html>';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.download='customer.html';
+  document.body.appendChild(a); a.click(); a.remove();
+  let url='customer.html'; try{ url=new URL('customer.html',location.href).href; }catch(e){}
+  cur={};
+  openModal('<div class="shead" style="grid-template-columns:1fr auto"><h2>สร้างหน้าลูกค้าแล้ว</h2><button type="button" class="x" data-close aria-label="ปิด">×</button></div>'+
+    '<div class="sec"><h3>ไฟล์ customer.html ถูกโหลดลงเครื่องแล้ว</h3>'+
+    '<p style="margin:0 0 8px">1. ไปที่รีโป GitHub แล้วกด Add file → Upload files</p>'+
+    '<p style="margin:0 0 8px">2. ลากไฟล์ customer.html ไปวาง แล้วกด Commit changes (ถ้ามีอยู่แล้วจะถูกเขียนทับ)</p>'+
+    '<p style="margin:0 0 8px">3. ส่งลิงก์นี้ให้ลูกค้า:</p>'+
+    '<div class="big"><div class="v" style="font-size:.95rem">'+esc(url)+'</div></div>'+
+    '<p class="note">หน้านี้เป็นภาพ ณ ตอนที่สร้าง เมื่อคิวเปลี่ยน ต้องกดสร้างใหม่แล้วอัปโหลดทับอีกครั้ง</p>'+
+    '<button type="button" class="btn soft" data-close>ปิด</button></div>');
+}
+$('#custBtn').addEventListener('click',()=>{ exportCustomer(); });
 
 /* ---------- start ---------- */
 render();
